@@ -1,0 +1,20 @@
+---
+gitea_mirrors_service_name: 'gitea-mirrors'
+gitea_mirrors_script_path: '/usr/local/bin/gitea_mirror.py'
+gitea_mirrors_log_level: 'info'
+
+# Org/Repo selection
+gitea_mirrors_orgs: []
+gitea_mirrors_include_regex: ~
+gitea_mirrors_exclude_regex: ~
+
+gitea_mirrors_timer_user: 'nobody'
+gitea_mirrors_timer_frequency: 'daily'
+gitea_mirrors_timer_timeout_sec: 600
+
+# Necessary secrets
+gitea_mirrors_api_token: ~
+gitea_mirrors_api_url: 'http://127.0.0.1:3000/api/v1/'
+
+# GitHub token with read access to repos
+gitea_mirrors_gh_api_token: ~

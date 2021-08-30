@@ -1,0 +1,31 @@
+---
+- name: Install PyGithub module
+  apt:
+    name: python3-github
+
+- name: Copy over mirror script
+  copy:
+    src: 'mirror.py'
+    dest: '{{ gitea_mirrors_script_path }}'
+    mode: 0755
+
+- name: Create timer for mirroring repos
+  include_role: name=systemd-timer
+  vars:
+    systemd_timer_name: '{{ gitea_mirrors_service_name }}'
+    systemd_timer_user: '{{ gitea_mirrors_timer_user }}'
+    systemd_timer_description: 'Gitea/GitHub Repo Mirroring'
+    systemd_timer_frequency: '{{ gitea_mirrors_timer_frequency }}'
+    systemd_timer_timeout_sec: '{{ gitea_mirrors_timer_timeout_sec }}'
+    systemd_timer_after_extra: 'docker.service'
+    systemd_timer_start_on_creation: false
+    systemd_timer_work_dir: '/tmp'
+    systemd_timer_script_path: '{{ gitea_mirrors_script_path }}'
+    systemd_timer_script_args: |-
+      -l {{ gitea_mirrors_log_level }} {{ gitea_mirrors_orgs | join(',') }}
+    systemd_timer_environment:
+      GITHUB_TOKEN: '{{ gitea_mirrors_gh_api_token | mandatory }}'
+      GITEA_TOKEN: '{{ gitea_mirrors_api_token | mandatory }}'
+      GITEA_URL: '{{ gitea_mirrors_api_url | mandatory }}'
+      REPO_INCLUDE_REGEX: '{{ gitea_mirrors_include_regex }}'
+      REPO_EXCLUDE_REGEX: '{{ gitea_mirrors_exclude_regex }}'
