@@ -12,13 +12,9 @@ log.getLogger('github').setLevel(log.WARN)
 
 
 def skip_repo(name, include_regex, exclude_regex):
-    exclude = False
-    include = True
-    if exclude_regex:
-        exclude = match(exclude_regex, name)
-    if include_regex:
-        include = match(include_regex, name)
-    if not include and exclude:
+    if include_regex and match(include_regex, name):
+        return False
+    if exclude_regex and match(exclude_regex, name):
         return True
     return False
 
@@ -44,7 +40,7 @@ def parse_args():
 def main():
     args = parse_args()
     log.root.handlers=[]
-    log.basicConfig(format='%(levelname)s - %(message)s', level=args.log_level.upper())
+    log.basicConfig(format='%(levelname)7s - %(message)s', level=args.log_level.upper())
 
     gh = Github(args.github_token)
     admin = gh.get_user()
@@ -66,21 +62,29 @@ def main():
         created, updated = 0, 0
         for repo in org.get_repos(type=args.repo_types):
             prefix = '[%s/%s]' % (org.login, repo.name)
-            
+            log.info('%s: ID=%d (%s)', prefix, repo.id,
+                     ("private" if repo.private else "public"))
+
             if repo.archived:
+                log.debug('%s: ARCHIVED', prefix)
+                continue
+            # Temporary private fork for security advisory.
+            if repo.private and not repo.has_issues:
+                log.debug('%s: TEMPORARY', prefix)
                 continue
             if skip_repo(repo.name, args.include_regex, args.exclude_regex):
-                log.debug('%s: SKIPPING', prefix)
+                log.warning('%s: SKIPPING', prefix)
                 continue
 
             perms = repo.get_collaborator_permission(user)
-            bots_perms = bots.get_repo_permission(repo)
             if perms == 'read':
-                log.info('%s: ALREADY READ', prefix)
+                log.debug('%s: ALREADY READ', prefix)
                 continue
-            elif perms == 'write' and bots_perms and bots_perms.push:
-                log.info('%s: BOTS GROUP', prefix)
-                continue
+            elif perms == 'write':
+                bots_perms = bots.get_repo_permission(repo)
+                if bots_perms and bots_perms.push:
+                    log.info('%s: BOTS GROUP', prefix)
+                    continue
             elif perms == 'write':
                 log.info('%s: REMOVING WRITE', prefix)
                 repo.remove_from_collaborators(user)
