@@ -115,13 +115,9 @@ class Gitea:
 
 
 def skip_repo(name, include_regex, exclude_regex):
-    exclude = False
-    include = True
-    if exclude_regex:
-        exclude = match(exclude_regex, name)
-    if include_regex:
-        include = match(include_regex, name)
-    if not include and exclude:
+    if include_regex and match(include_regex, name):
+        return False
+    if exclude_regex and match(exclude_regex, name):
         return True
     return False
 
@@ -168,7 +164,7 @@ def main():
             prefix = '[%s/%s]' % (org.login, repo.name)
             
             if skip_repo(repo.name, args.include_regex, args.exclude_regex):
-                log.debug('%s: SKIPPING', prefix)
+                log.warning('%s: SKIPPING', prefix)
                 continue
 
             log.debug('%s: GH ID: %s', prefix, repo.id)
