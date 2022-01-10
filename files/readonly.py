@@ -47,13 +47,19 @@ def main():
     log.basicConfig(format='%(levelname)s - %(message)s', level=args.log_level.upper())
 
     gh = Github(args.github_token)
+    admin = gh.get_user()
+    log.info('GitHub token user: %s (ID: %d)', admin.login, admin.id)
 
     user = gh.get_user(args.github_user)
-    log.info('GitHub User ID: %s', user.id)
+    log.info('GitHub user to add: %s (ID: %d)', user.login, user.id)
 
     for org_name in args.orgs.split(','):
         org = gh.get_organization(org_name)
         log.info('Org: %s', org.login)
+        try:
+            bots = org.get_team_by_slug('bots')
+        except:
+            bots = None
 
         org.add_to_members(user)
 
@@ -68,8 +74,12 @@ def main():
                 continue
 
             perms = repo.get_collaborator_permission(user)
+            bots_perms = bots.get_repo_permission(repo)
             if perms == 'read':
                 log.info('%s: ALREADY READ', prefix)
+                continue
+            elif perms == 'write' and bots_perms and bots_perms.push:
+                log.info('%s: BOTS GROUP', prefix)
                 continue
             elif perms == 'write':
                 log.info('%s: REMOVING WRITE', prefix)
@@ -77,7 +87,7 @@ def main():
                 perms = 'none'
             if perms == 'none':
                 log.info('%s: ADDING READ', prefix)
-                repo.add_to_collaborators(user, 'read')
+                repo.add_to_collaborators(user, 'pull')
 
 
 if __name__ == '__main__':
