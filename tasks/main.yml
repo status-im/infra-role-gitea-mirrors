@@ -13,7 +13,7 @@
   include_role: name=systemd-timer
   vars:
     systemd_timer_name: '{{ gitea_mirrors_service_name }}'
-    systemd_timer_user: '{{ gitea_mirrors_timer_user }}'
+    systemd_timer_dynamic_user: true
     systemd_timer_description: 'Gitea/GitHub Repo Mirroring'
     systemd_timer_frequency: '{{ gitea_mirrors_timer_frequency }}'
     systemd_timer_timeout_sec: '{{ gitea_mirrors_timer_timeout_sec }}'
