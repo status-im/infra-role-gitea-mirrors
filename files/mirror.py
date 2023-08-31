@@ -53,17 +53,6 @@ class Gitea:
         else:
             return self.update_org(org)
 
-    def _parse_gh_org(self, org):
-        return {
-          'description': org.description,
-          'full_name': org.name,
-          'location': org.location,
-          'username': org.login,
-          'website': org.blog,
-          'repo_admin_change_team_access': True,
-          'visibility': 'public',
-        }
-
     def get_org(self, org):
         return self._request('GET', 'orgs/'+org.login)
 
@@ -84,21 +73,38 @@ class Gitea:
         else:
             return self.update_repo(repo)
 
+    def _parse_gh_org(self, org):
+        # https://github.com/go-gitea/gitea/blob/v1.20.3/modules/structs/org.go#L29-L41
+        if len(org.name) > 40:
+            raise Exception('Max org name length is 40 characters! (%s)' % org.name)
+        return {
+          'username':    org.login,
+          'full_name':   (org.name or '')[:100],
+          'description': (org.description or '')[:255],
+          'location':    (org.location or '')[:50],
+          'website':     (org.blog or '')[:255],
+          'visibility': 'public',
+          'repo_admin_change_team_access': True,
+        }
+
     def _parse_gh_repo(self, repo):
+        # https://github.com/go-gitea/gitea/blob/v1.20.3/modules/structs/repo.go#L103-L132
+        if len(repo.name) > 100:
+            raise Exception('Max repo name length is 100 characters! (%s)' % repo.name)
         data = {
-          'service': 'git',
-          'clone_addr': repo.clone_url,
-          'description': repo.description,
-          'repo_name': repo.name,
-          'repo_owner': repo.owner.login,
-          'private': repo.private,
-          'issues': repo.has_issues,
-          'wiki': repo.has_wiki,
-          'website': repo.homepage,
-          'labels': not list(repo.get_labels()),
-          'releases': not list(repo.get_releases()),
-          'mirror': True,
-          'milestones': True,
+          'service':       'git',
+          'repo_name':     repo.name,
+          'repo_owner':    repo.owner.login,
+          'clone_addr':    repo.clone_url,
+          'description':   (repo.description or '')[:2048],
+          'website':       (repo.homepage or '')[:1024],
+          'private':       repo.private,
+          'issues':        repo.has_issues,
+          'wiki':          repo.has_wiki,
+          'labels':        not list(repo.get_labels()),
+          'releases':      not list(repo.get_releases()),
+          'mirror':        True,
+          'milestones':    True,
           'pull_requests': True,
         }
         # Necessary to facilitate mirroring private repos
@@ -163,7 +169,7 @@ def main():
         log.info('Org: %s', org.login)
 
         created, updated = 0, 0
-        for repo in org.get_repos(type=args.repo_types):
+        for repo in sorted(org.get_repos(type=args.repo_types), key=lambda r: r.name):
             prefix = '[%s/%s]' % (org.login, repo.name)
             
             if skip_repo(repo.name, args.include_regex, args.exclude_regex):
