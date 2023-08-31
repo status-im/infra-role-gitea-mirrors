@@ -31,9 +31,12 @@ class Gitea:
                 headers=headers,
             )
         except exceptions.ConnectionError as e:
-            log.error('ConnectionError on url {}: {}'.format(url, e))
+            log.error('ConnectionError on url %s: %s', url, e)
             return None
-        result.raise_for_status()
+        if result.status_code not in [200, 201, 404]:
+            log.error('Request failed: %s %s (%d)', method, url, result.status_code)
+            log.error('Error: %s', result.text)
+            result.raise_for_status()
         return result
 
     def version(self):
