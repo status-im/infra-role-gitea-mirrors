@@ -140,7 +140,8 @@ def parse_args():
     )
     parser.add_argument('orgs', help='List of GitHub orgs separated by a commas.')
     parser.add_argument('-l', '--log-level', help='Logging level', default='info')
-    parser.add_argument('-T', '--repo-types', help='Types of repos.', default='public')
+    parser.add_argument('-T', '--repo-types', help='Types of repos. (all,private,public)',
+                        default=env.get('REPO_TYPES', 'all'))
     parser.add_argument('-i', '--include-regex', help='Regex for including repos',
                         default=env.get('REPO_INCLUDE_REGEX'))
     parser.add_argument('-e', '--exclude-regex', help='Regex for excluding repos',
