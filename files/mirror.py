@@ -84,7 +84,7 @@ class Gitea:
           'full_name':   (org.name or '')[:100],
           'description': (org.description or '')[:255],
           'location':    (org.location or '')[:50],
-          'website':     (org.blog or '')[:255],
+          'website':     sanitize_url(org.blog or '')[:255],
           'visibility': 'public',
           'repo_admin_change_team_access': True,
         }
@@ -99,7 +99,7 @@ class Gitea:
           'repo_owner':    repo.owner.login,
           'clone_addr':    repo.clone_url,
           'description':   (repo.description or '')[:2048],
-          'website':       (repo.homepage or '')[:1024],
+          'website':       sanitize_url(repo.homepage or '')[:1024],
           'private':       repo.private,
           'issues':        repo.has_issues,
           'wiki':          repo.has_wiki,
@@ -123,6 +123,12 @@ class Gitea:
     def update_repo(self, repo):
         return self._request('PATCH', 'repos/%s/%s' % (repo.owner.login, repo.name),
                              self._parse_gh_repo(repo))
+
+
+def sanitize_url(url):
+    if url != '' and not url.startswith('http'):
+        return 'https://%s' % url
+    return url
 
 
 def skip_repo(name, include_regex, exclude_regex):
