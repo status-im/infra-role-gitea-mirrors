@@ -10,7 +10,7 @@
     mode: 0755
 
 - name: Create timer for mirroring repos
-  include_role: name=systemd-timer
+  include_role: name=infra-role-systemd-timer
   vars:
     systemd_timer_name: '{{ gitea_mirrors_service_name }}'
     systemd_timer_dynamic_user: true
