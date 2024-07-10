@@ -12,15 +12,16 @@
 - name: Create timers for mirroring repos
   include_role: name=infra-role-systemd-timer
   vars:
-    systemd_timer_name: '{{ gitea_mirrors_service_name }}:{{ gitea_mirrors_orgs[index] }}'
-    systemd_timer_dynamic_user: true
     systemd_timer_description: 'Gitea/GitHub Repo Mirroring'
-    systemd_timer_frequency: '{{ gitea_mirrors_timer_frequency }}'
-    systemd_timer_timeout_sec: '{{ gitea_mirrors_timer_timeout_sec }}'
-    systemd_timer_after_extra: '{{ gitea_mirrors_service_name + "-" + gitea_mirrors_orgs[index - 1] +".service" if index  > 0 else "docker.service" }}'
+    systemd_timer_dynamic_user: true
     systemd_timer_start_on_creation: false
     systemd_timer_work_dir: '/tmp'
-    systemd_timer_script_path: '{{ gitea_mirrors_script_path }}'
+    systemd_timer_name:             '{{ gitea_mirrors_service_name }}:{{ gitea_mirrors_orgs[index] }}'
+    systemd_timer_frequency:        '{{ gitea_mirrors_timer_frequency }}'
+    systemd_timer_random_delay_sec: '{{ gitea_mirrors_timer_random_delay_sec }}'
+    systemd_timer_timeout_sec:      '{{ gitea_mirrors_timer_timeout_sec }}'
+    systemd_timer_after_extra:      '{{ gitea_mirrors_service_name + "-" + gitea_mirrors_orgs[index - 1] +".service" if index  > 0 else "docker.service" }}'
+    systemd_timer_script_path:      '{{ gitea_mirrors_script_path }}'
     systemd_timer_script_args: |-
       -l {{ gitea_mirrors_log_level }} {{ gitea_mirrors_orgs[index] }}
     systemd_timer_environment:
