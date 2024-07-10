@@ -1,0 +1,16 @@
+---
+galaxy_info:
+  author: Jakub Sokolowski <jakub@status.im>
+  description: Deploy Gitea mirroring script
+  company: Status.im
+  license: MIT
+  min_ansible_version: 1.9
+  platforms:
+  - name: Ubuntu
+    versions:
+    - xenial
+    - focal
+  dependencies:
+    - name: systemd-timer
+      src: git+git@github.com:status-im/infra-role-systemd-timer.git
+      scm: git
