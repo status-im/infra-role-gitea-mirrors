@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import time
 import argparse
 import logging as log
 from re import match
@@ -13,6 +14,23 @@ from requests import request, exceptions
 log.getLogger('urllib3').setLevel(log.WARN)
 log.getLogger('github').setLevel(log.WARN)
 
+def retry(max_retries, wait_time):
+    def decorator(func):
+        def wrapper(*args, **kwargs):
+            retries = 0
+            delay = wait_time
+            while retries < max_retries:
+                try:
+                    return func(*args, **kwargs)
+                except exceptions.HTTPError as e:
+                    retries += 1
+                    if retries >= max_retries or e.response.status_code == 404:
+                        raise
+                    time.sleep(delay)
+                    delay *= 2
+        return wrapper
+    return decorator
+
 class Gitea:
 
     def __init__(self, url, token, gh_token):
@@ -20,22 +38,17 @@ class Gitea:
         self.token = token
         self.gh_token = gh_token
 
+    @retry(max_retries=5, wait_time=1)
     def _request(self, method, path, data=None):
         url = urljoin(self.url, path)
         headers = { 'Authorization': 'token ' + self.token }
-        try:
-            result = request(
-                method=method,
-                url=url,
-                json=data,
-                headers=headers,
-            )
-        except exceptions.ConnectionError as e:
-            log.error('ConnectionError on url %s: %s', url, e)
-            return None
-        if result.status_code == 404:
-            result.raise_for_status()
-        if result.status_code not in [200, 201, 404]:
+        result = request(
+            method=method,
+            url=url,
+            json=data,
+            headers=headers,
+        )
+        if result.status_code not in [200, 201]:
             log.error('Request failed: %s %s (%d)', method, url, result.status_code)
             log.error('Error: %s', result.text)
             result.raise_for_status()
