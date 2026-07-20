@@ -17,6 +17,7 @@
     systemd_timer_start_on_creation: false
     systemd_timer_work_dir: '/tmp'
     systemd_timer_name:             '{{ gitea_mirrors_service_name }}:{{ gitea_mirrors_orgs[index] }}'
+    systemd_timer_restart  :        '{{ gitea_mirrors_timer_restart }}'
     systemd_timer_frequency:        '{{ gitea_mirrors_timer_frequency }}'
     systemd_timer_random_delay_sec: '{{ gitea_mirrors_timer_random_delay_sec }}'
     systemd_timer_timeout_sec:      '{{ gitea_mirrors_timer_timeout_sec }}'

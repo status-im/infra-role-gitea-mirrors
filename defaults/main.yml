@@ -13,6 +13,8 @@ gitea_mirrors_timer_frequency: 'daily'
 gitea_mirrors_timer_random_delay_sec: 3600 # 1h
 gitea_mirrors_timer_timeout_sec: 7200 # 2h
 
+gitea_mirrors_timer_restart: 'no'
+
 # Necessary secrets
 gitea_mirrors_api_token: ~
 gitea_mirrors_api_url: 'http://127.0.0.1:3000/api/v1/'
